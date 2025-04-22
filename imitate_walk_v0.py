@@ -32,7 +32,7 @@ class ImitateWalkEnvV0(BaseV0):
         # "cyclic_hip": -10,
         "ref_ang": -5.0,
         "ref_rot": 10.0,
-        "act_reg": -50.0,
+        # "act_reg": -50.0,
         "hip_add_rot": 5.0
     }
 
@@ -77,7 +77,7 @@ class ImitateWalkEnvV0(BaseV0):
                 r_knee_weight = 1.0,
                 l_hip_weight = 1.0,
                 r_hip_weight = 1.0,
-                act_reg_weight = -50.0,
+                # act_reg_weight = -50.0,
                 hip_add_rot_weight = 5.0,
                 # ------
                **kwargs,
@@ -101,11 +101,11 @@ class ImitateWalkEnvV0(BaseV0):
         self.l_hip_weight = l_hip_weight
         self.r_hip_weight = r_hip_weight
         
-        self.act_reg_weight = act_reg_weight
+        # self.act_reg_weight = act_reg_weight
         self.hip_add_rot_weight = hip_add_rot_weight
         
         weighted_reward_keys['ref_ang'] = self.ref_ang_weight
-        weighted_reward_keys['act_reg'] = self.act_reg_weight
+        # weighted_reward_keys['act_reg'] = self.act_reg_weight
         weighted_reward_keys['hip_add_rot'] = self.hip_add_rot_weight
         # ------------
 
@@ -149,7 +149,7 @@ class ImitateWalkEnvV0(BaseV0):
         ref_rot = self._get_ref_rotation_rew()
         hip_add_rot_rew = self._get_joint_angle_rew(['hip_adduction_l', 'hip_adduction_r', 'hip_rotation_l',
                                                        'hip_rotation_r'])
-        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
+        # act_mag = (np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na).item() if self.sim.model.na !=0 else 0
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
@@ -157,17 +157,12 @@ class ImitateWalkEnvV0(BaseV0):
             ('ref_ang', ref_ang_reward),
             ('ref_rot',  ref_rot),
             ('hip_add_rot', hip_add_rot_rew),
-            ('act_reg', act_mag),
+            # ('act_reg', act_mag),
             # Must keys
             ('sparse',  vel_reward),
             ('solved',    vel_reward >= 1.0),
             ('done',  self._get_done()),
         ))
-        print(type(vel_reward))
-        print(type(ref_ang_reward))
-        print(type(ref_rot))
-        print(type(hip_add_rot_rew))
-        print(type(act_mag))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
@@ -257,9 +252,11 @@ class ImitateWalkEnvV0(BaseV0):
         Discourages nonzero velocity in the x direction.
         """
         vel = self._get_com_velocity()
-        y_arg = np.min(np.array([0, self.target_y_vel - vel[1]]))
-        # x_arg = np.min(np.array([0, self.target_x_vel - vel[0]]))
-        return np.exp(-np.square(y_arg)) + np.exp(-np.square(vel[0]))
+        if vel[1] > self.target_y_vel:
+            y_arg = 0                   # Flat rewards
+        else:
+            y_arg = self.target_y_vel - vel[1]
+        return np.exp(-np.square(y_arg)) + np.exp(-np.square(self.target_x_vel - vel[0]))
 
     # def _get_cyclic_rew(self):
     #     """
@@ -282,7 +279,7 @@ class ImitateWalkEnvV0(BaseV0):
         weights = np.array([self.l_ankle_weight, self.r_ankle_weight,
                             self.l_knee_weight, self.r_knee_weight,
                             self.l_hip_weight, self.r_hip_weight], dtype=np.float32)
-        if self.joint_velocity == False:
+        if not self.joint_velocity:
             # Angular position error
             target_angles = np.array([self.ref_joint_angles[l_index,0],self.ref_joint_angles[r_index,0],
                                       self.ref_joint_angles[l_index,1],self.ref_joint_angles[r_index,1],
@@ -303,15 +300,12 @@ class ImitateWalkEnvV0(BaseV0):
         target_rot = [self.target_rot if self.target_rot is not None else self.init_qpos[3:7]][0]
         return np.exp(-np.linalg.norm(5.0 * (self.sim.data.qpos[3:7] - target_rot)))
     
-    def _get_hip_add_reward(self):
-        """
-        Incentivize small hip adduction angles.
-        """
-        hip_add_angles = self._get_angle(['hip_adduction_l','hip_adduction_r'])
-        return np.exp(-np.linalg.norm(hip_add_angles))
-    
-    def _get_joint_accel_reward(self):
-        pass
+    # def _get_hip_add_reward(self):
+    #     """
+    #     Incentivize small hip adduction angles.
+    #     """
+    #     hip_add_angles = self._get_angle(['hip_adduction_l','hip_adduction_r'])
+    #     return np.exp(-np.linalg.norm(hip_add_angles))
 
     def _get_torso_angle(self):
         body_id = self.sim.model.body_name2id('torso')
@@ -362,9 +356,3 @@ class ImitateWalkEnvV0(BaseV0):
         Get the angular velocities of a list of named joints.
         """
         return np.array([self.sim.data.qvel[self.sim.model.jnt_dofadr[self.sim.model.joint_name2id(name)]] for name in names])
-    # def _get_joint_accel(self):
-    #     """
-    #     Get the average angular acceleration of all joints.
-    #     """
-    #     # Ignoring free root joint (joint id = 0)
-    #     return np.mean(np.abs(self.sim.data.qacc[6:]))
