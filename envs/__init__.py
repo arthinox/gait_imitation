@@ -398,22 +398,6 @@ register(id='imitateWalk-v0',
     }
 )
 
-register(id='imitateOpenPose-v0',
-    entry_point='myosuite.envs.myo.myobase.imitate_openpose_v0:ImitateOpenPoseEnvV0',
-    max_episode_steps=1000,
-    kwargs={
-        'model_path': curr_dir + leg_model,
-        'normalize_act': True,
-        'min_height':0.8,    # minimum center of mass height before reset
-        'max_rot':0.8,       # maximum rotation before reset
-        'hip_period':113,    # desired periodic hip angle movement
-        'reset_type':'init', # none, init, random
-        'target_x_vel':0.0,  # desired x velocity in m/s
-        'target_y_vel':1.25,  # desired y velocity in m/s
-        'target_rot': None   # if None then the initial root pos will be taken, otherwise provide quat
-    }
-)
-
 # Hand-Joint Reaching ==============================
 register_env_with_variants(id='myoHandReachFixed-v0',
         entry_point='myosuite.envs.myo.myobase.reach_v0:ReachEnvV0',

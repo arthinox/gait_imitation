@@ -10,7 +10,7 @@ import pandas as pd
 from myosuite.envs.myo.base_v0 import BaseV0
 from myosuite.utils.quat_math import quat2mat
 
-class ImitateOpenPoseEnvV0(BaseV0):
+class ImitateWalkEnvV0(BaseV0):
 
     DEFAULT_OBS_KEYS = [
         'qpos_without_xy',
