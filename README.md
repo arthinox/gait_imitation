@@ -18,6 +18,6 @@ Files used to perform two main tasks:
 ### record
 Files used to record simulation data.
 ### reference_kinematics
-Reference kinematic data, already processed to be accessed by reward function
+Reference kinematic data, already processed for use by reward function.
 ## Installation
 (This section is a work in progress.)
