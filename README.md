@@ -12,9 +12,9 @@ Custom MyoSuite environment and registration file.
 ### misc_data
 Useful data to help understand the myoLeg MSK model.
 ### process
-Files used to perform two main tasks:__
-1. Process motion capture or pose estimation data to be used by reward function__
-2. Process simulated angles for gait analysis__
+Files used to perform two main tasks:  
+1. Process motion capture or pose estimation data to be used by reward function  
+2. Process simulated angles for gait analysis  
 ### record
 Files used to record simulation data.
 ### reference_kinematics
